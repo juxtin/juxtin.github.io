@@ -17,12 +17,6 @@ circledNumberCode x =
       let idx = fromInteger (x + 9311) in
         chr idx
 
-unicodeCircleNum :: Integer -> Maybe Char
-unicodeCircleNum i =
-  if 0 < i && i <= 20
-    then circledNumberCode i
-    else Nothing
-
 substituteCircleNums :: String -> String -> String
 substituteCircleNums re = RE.gsubRegexPRBy re tryToCircle
   where
@@ -60,6 +54,10 @@ main = hakyll $ do
     match "css/*" $ do
         route   idRoute
         compile compressCssCompiler
+
+    match "js/*" $ do
+        route idRoute
+        compile copyFileCompiler
 
     match (fromList ["about.rst", "contact.markdown"]) $ do
         route   $ setExtension "html"

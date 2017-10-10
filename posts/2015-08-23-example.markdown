@@ -8,7 +8,28 @@ Morbi condimentum, tortor et tincidunt ullamcorper, sem quam pretium nulla, id
 convallis lectus libero nec turpis. Proin dapibus nisi id est sodales nec
 ultrices tortor pellentesque.
 
-Vivamus vel nisi ac lacus sollicitudin vulputate
+```haskell
+foo :: Int
+foo = 69 {{1}}
+main = do
+  x <- thing
+  return x
+  
+data Bool = False | True deriving (Show, Eq)
+
+fuck :: Bool -> String
+fuck True = "yes"
+fuck False = "no"
+
+dafuq :: Maybe Bool -> String
+dafuq (Just True) = "hell yes"
+dafuq (Just False) = "hell no"
+dafuq Nothing = "I guess not"
+```
+
+{{1}}: nice.
+
+Vivamus{{9}} vel nisi ac lacus sollicitudin vulputate
 ac ut ligula. Nullam feugiat risus eget eros gravida in molestie sapien euismod.
 Nunc sed hendrerit orci. Nulla mollis consequat lorem ac blandit. Ut et turpis
 mauris. Nulla est odio, posuere id ullamcorper sit amet, tincidunt vel justo.
