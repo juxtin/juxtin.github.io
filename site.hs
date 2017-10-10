@@ -1,9 +1,54 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
-import           Data.Monoid (mappend)
+import           Data.Char    (isDigit, chr)
+import           Data.Maybe   (fromMaybe)
+import           Data.Monoid  (mappend)
 import           Hakyll
+import qualified Text.RegexPR as RE
 
+circledNumberCode :: Integer -> Maybe Char
+circledNumberCode x =
+  if 0 < x && x <= 20
+    then Just $ unicodify x
+    else Nothing
+  where
+    unicodify :: Integer -> Char
+    unicodify x =
+      let idx = fromInteger (x + 9311) in
+        chr idx
 
+unicodeCircleNum :: Integer -> Maybe Char
+unicodeCircleNum i =
+  if 0 < i && i <= 20
+    then circledNumberCode i
+    else Nothing
+
+substituteCircleNums :: String -> String -> String
+substituteCircleNums re = RE.gsubRegexPRBy re tryToCircle
+  where
+    tryToCircle :: String -> String
+    tryToCircle s =
+      let
+        digits = filter isDigit s
+        i = read digits :: Integer
+      in
+        case circledNumberCode i of
+          Just c -> [c]
+          Nothing -> "(" ++ digits ++ ")"
+
+substituteCircleNumsRaw :: String -> String
+substituteCircleNumsRaw = substituteCircleNums "{{[0-9]+}}"
+
+substituteCircleNumsHTML :: String -> String
+substituteCircleNumsHTML = substituteCircleNums "{{<span class=\"dv\">[0-9]+</span>}}"
+
+mapPostBodies :: (String -> String) -> Item String -> Compiler (Item String)
+mapPostBodies f post = do
+  let body = itemBody post
+  return $ post {itemBody = f body}
+
+numberTagsInPosts :: Item String -> Compiler (Item String)
+numberTagsInPosts = mapPostBodies (substituteCircleNumsHTML . substituteCircleNumsRaw)
 
 --------------------------------------------------------------------------------
 main :: IO ()
@@ -28,6 +73,7 @@ main = hakyll $ do
             >>= loadAndApplyTemplate "templates/post.html"    postCtx
             >>= loadAndApplyTemplate "templates/default.html" postCtx
             >>= relativizeUrls
+            >>= numberTagsInPosts
 
     create ["archive.html"] $ do
         route idRoute

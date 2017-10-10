@@ -18,4 +18,6 @@ executable ppj-blog
   default-language:    Haskell2010
   ghc-options:         -threaded
   build-depends:       base >= 4.7 && < 5,
-                       hakyll
+                       hakyll,
+                       regexpr == 0.5.4,
+                       text >= 1.2.2.2
