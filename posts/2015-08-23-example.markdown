@@ -18,13 +18,26 @@ main = do
 data Bool = False | True deriving (Show, Eq)
 
 fuck :: Bool -> String
-fuck True = "yes"
+fuck True = "yes" -- yeah
 fuck False = "no"
 
 dafuq :: Maybe Bool -> String
 dafuq (Just True) = "hell yes"
 dafuq (Just False) = "hell no"
 dafuq Nothing = "I guess not"
+```
+
+```clojure
+(defn football
+  "This is a docstring!"
+  [] ; comment
+  (println "are you a robot, BMO?")
+  (let [response "no, I am a little living boy!"]
+    (println response)
+    {:int 0
+     :float 1.0
+     :symbol 'hi
+     :set #{1}}))
 ```
 
 {{1}}: nice.
