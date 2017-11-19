@@ -2,5 +2,11 @@
 title: Contact
 ---
 
-I live in a small hut in the mountains of Kumano Kodō on Kii Hantō and would not
-like to be contacted.
+You can reach me on Twitter [\@postpunkjustin][twitter], or via [email].
+
+Job offers/recruiter inquiries are fine, provided they don't require me to
+relocate away from Portland, Oregon. That said, I'm not really looking to change
+jobs right now.
+
+[twitter]: https://twitter.com/postpunkjustin
+[email]: mailto:justin@postpunkjustin.com
