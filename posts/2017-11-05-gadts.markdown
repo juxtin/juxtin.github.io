@@ -1,0 +1,53 @@
+---
+title: What even are GADTs?
+---
+
+> ***note: This post assumes some casual familiarity with Haskell, especially with
+> (plain ol') Algebraic Data Types.***
+
+## The goal
+
+Let's say we're working on an application that queries some live data source, and we want to:
+
+a. model queries as data
+b. run those queries in a type-safe manner
+
+Ideally, we'd end up with a function that more or less works like this:
+
+```haskell
+runQuery :: Query a -> IO a
+```
+
+In other words, it could take a `Query [Transaction]` and return an `IO [Transaction]`, or it
+could take a `Query (Maybe User)` and return `IO (Maybe User)`, etc.  You get
+the picture.
+
+## A first try
+
+Let's try writing a data type to represent queries:
+
+```
+data Query' a =
+    SelectUserById' Int
+  | SelectTransactionsForUser' Int 
+```
+
+There's something really off about this. We have a type parameter, but it's
+unused in all of the constructors. We can kind of get by, though:
+
+```haskell
+selectUser' :: Int -> Query' (Maybe User)
+selectUser' = SelectUserById'
+
+selectTransactions' :: Int -> Query' [Transaction]
+selectTransactions' = SelectTransactionsForUser'
+```
+
+With these helper functions, we technically have everything we need in order to
+write `runQuery`, but nothing's stopping someone from writing up some garbage
+like this:
+
+```haskell
+wtfQuery :: Query' (Either Unicorn Void)
+wtfQuery = SelectTransactionsForUser' 666
+```
