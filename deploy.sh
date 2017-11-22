@@ -30,29 +30,29 @@ function error {
 step "Deploying to ${TARGET}:"
 
 substep "Building site..."
-stack build && stack exec ppj-blog build || error "Unable to build site!"
+stack build && stack exec ppj-blog build || error "Unable to build site! Check above for errors."
 
 substep "Stashing and checking out ${TARGET}..."
 git stash save || fail "Unable to save stash!"
-git checkout ${TARGET} || git checkout master && git checkout -b ${TARGET} || error "Unable to checkout ${TARGET}"
+git checkout ${TARGET} || error "Unable to checkout ${TARGET}! Please make sure that branch exists."
 
 substep "On ${TARGET}. Copying files..."
 cp -a _site/. . || error "Unable to copy!"
 
 substep "Committing new contents..."
-git add -A && git commit -m "automated deployment" || error "Unable to commit!"
+git add -A && git commit -m "automated deployment" || error "Unable to commit! Maybe a git config issue?"
 
 substep "Pushing to github pages..."
-git push holguinj HEAD || error "Unable to push!"
+git push holguinj HEAD || error "Unable to push! That seems weird."
 
 step "Deployed!"
 
 step "Returning things back to normal."
 
 substep "Checking out previous branch..."
-git checkout - || error "Unable to return to original branch!"
+git checkout - || error "Unable to return to original branch! What kind of nonsense is this?"
 
 substep "Applying stash..."
-git stash pop || error "Unable to apply stash!"
+git stash pop || error "Unable to apply stash! That might really suck."
 
 step "All done!"
