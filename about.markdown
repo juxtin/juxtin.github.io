@@ -30,7 +30,9 @@ This blog is rendered using [Hakyll], with a few extras and modifications thrown
   `n` is a number from 0 to 20.
 * **Syntax highlighting** comes from [highlight.js], using a modified version of the
   Monokai theme that matches the one I use in Spacemacs as much as possible.
+* The complete **source code** is available on [GitHub].
 
 [Hakyll]: https://jaspervdj.be/hakyll/
 [Hakyll CSS Garden]: http://katychuang.com/hakyll-cssgarden/themes/default/?theme=haskell.org
 [highlight.js]: https://highlightjs.org/
+[GitHub]: https://github.com/holguinj/holguinj.github.io/tree/develop
