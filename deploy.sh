@@ -22,7 +22,7 @@ function substep () {
     printf "${GREEN}      $*  ${NC}\n"
 }
 
-function error {
+function error () {
     printf "${RED} $* ${NC}\n"
     exit 1
 }
