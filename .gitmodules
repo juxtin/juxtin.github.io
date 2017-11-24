@@ -1,0 +1,4 @@
+[submodule "submodules/brainfuck"]
+	path = submodules/brainfuck
+	url = https://github.com/holguinj/brainfuck
+	branch = literate
