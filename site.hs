@@ -6,6 +6,18 @@ import           Data.Monoid  (mappend)
 import           Hakyll
 import qualified Text.RegexPR as RE
 
+
+--------------------------------------------------------------------------------
+-- Drafts
+
+isDraft :: Metadata -> Bool
+isDraft meta =
+  case lookupString "draft" meta of
+    Nothing -> False
+    _ -> True
+
+--------------------------------------------------------------------------------
+-- CircleNum stuff
 circledNumberCode :: Integer -> Maybe Char
 circledNumberCode x =
   if 0 < x && x <= 20
@@ -45,6 +57,16 @@ numberTagsInPosts :: Item String -> Compiler (Item String)
 numberTagsInPosts = mapPostBodies (substituteCircleNumsHTML . substituteCircleNumsRaw)
 
 --------------------------------------------------------------------------------
+
+postCompiler :: Rules ()
+postCompiler = do
+  route $ setExtension "html"
+  compile $ pandocCompiler
+        >>= loadAndApplyTemplate "templates/post.html"    postCtx
+        >>= loadAndApplyTemplate "templates/default.html" postCtx
+        >>= relativizeUrls
+        >>= numberTagsInPosts
+
 main :: IO ()
 main = hakyll $ do
     match "images/*" $ do
@@ -66,13 +88,8 @@ main = hakyll $ do
             >>= relativizeUrls
             >>= numberTagsInPosts
 
-    match "posts/*" $ do
-        route $ setExtension "html"
-        compile $ pandocCompiler
-            >>= loadAndApplyTemplate "templates/post.html"    postCtx
-            >>= loadAndApplyTemplate "templates/default.html" postCtx
-            >>= relativizeUrls
-            >>= numberTagsInPosts
+    matchMetadata "posts/*" (not . isDraft)
+        postCompiler
 
     create ["archive.html"] $ do
         route idRoute
