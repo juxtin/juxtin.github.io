@@ -58,15 +58,6 @@ numberTagsInPosts = mapPostBodies (substituteCircleNumsHTML . substituteCircleNu
 
 --------------------------------------------------------------------------------
 
-postCompiler :: Rules ()
-postCompiler = do
-  route $ setExtension "html"
-  compile $ pandocCompiler
-        >>= loadAndApplyTemplate "templates/post.html"    postCtx
-        >>= loadAndApplyTemplate "templates/default.html" postCtx
-        >>= relativizeUrls
-        >>= numberTagsInPosts
-
 main :: IO ()
 main = hakyll $ do
     match "images/*" $ do
@@ -129,3 +120,11 @@ postCtx =
     dateField "date" "%B %e, %Y" `mappend`
     defaultContext
 
+postCompiler :: Rules ()
+postCompiler = do
+  route $ setExtension "html"
+  compile $ pandocCompiler
+        >>= loadAndApplyTemplate "templates/post.html"    postCtx
+        >>= loadAndApplyTemplate "templates/default.html" postCtx
+        >>= relativizeUrls
+        >>= numberTagsInPosts
