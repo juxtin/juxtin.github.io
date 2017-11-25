@@ -1,7 +1,6 @@
 --------------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 import           Data.Char    (isDigit, chr)
-import           Data.Maybe   (fromMaybe)
 import           Data.Monoid  (mappend)
 import           Hakyll
 import qualified Text.RegexPR as RE
@@ -18,6 +17,7 @@ isDraft meta =
 
 --------------------------------------------------------------------------------
 -- CircleNum stuff
+
 circledNumberCode :: Integer -> Maybe Char
 circledNumberCode x =
   if 0 < x && x <= 20
@@ -57,6 +57,7 @@ numberTagsInPosts :: Item String -> Compiler (Item String)
 numberTagsInPosts = mapPostBodies (substituteCircleNumsHTML . substituteCircleNumsRaw)
 
 --------------------------------------------------------------------------------
+-- Routes
 
 main :: IO ()
 main = hakyll $ do
@@ -115,6 +116,8 @@ main = hakyll $ do
 
 
 --------------------------------------------------------------------------------
+-- Route helpers
+
 postCtx :: Context String
 postCtx =
     dateField "date" "%B %e, %Y" `mappend`
