@@ -1,5 +1,7 @@
 ---
 title: What even are GADTs?
+summary: A quick, beginner-level overview of what Haskell's Generalized Algebraic Data Types are good for.
+tags: haskell, static-types, beginner
 ---
 
 > ***note: This post assumes some casual familiarity with Haskell, especially with

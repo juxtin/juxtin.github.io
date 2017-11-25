@@ -95,6 +95,12 @@ div#footer a {
   text-decoration: none;
 }
 
+div.postSummary {
+    margin-top: 2px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+}
+
 div.info {
     color: #555;
     font-size: 14px;
