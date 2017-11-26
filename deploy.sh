@@ -34,6 +34,8 @@ function working_dir_clean () {
 step "Ensuring that the git working directory is clean..."
 if working_dir_clean; then
     substep "all changes are committed."
+elif [[ -n $ALLOW_DIRTY_DEPLOY ]]; then
+    substep "deploying despite dirt."
 else
     error "You have uncommitted changes! Please commit, stash, or reset before deploying."
 fi
