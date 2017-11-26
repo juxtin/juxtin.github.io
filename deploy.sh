@@ -27,6 +27,17 @@ function error () {
     exit 1
 }
 
+function working_dir_clean () {
+    git diff-index --quiet HEAD
+}
+
+step "Ensuring that the git working directory is clean..."
+if working_dir_clean; then
+    substep "all changes are committed."
+else
+    error "You have uncommitted changes! Please commit, stash, or reset before deploying."
+fi
+
 step "Deploying to ${TARGET}:"
 
 substep "Building site..."
