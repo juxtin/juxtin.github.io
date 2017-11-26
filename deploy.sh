@@ -45,8 +45,7 @@ step "Deploying to ${TARGET}:"
 substep "Building site..."
 stack build && stack exec ppj-blog build || error "Unable to build site! Check above for errors."
 
-substep "Stashing and checking out ${TARGET}..."
-git stash save || fail "Unable to save stash!"
+substep "Checking out ${TARGET}..."
 git checkout ${TARGET} || error "Unable to checkout ${TARGET}! Please make sure that branch exists."
 
 substep "On ${TARGET}. Copying files..."
@@ -64,8 +63,5 @@ step "Returning things back to normal."
 
 substep "Checking out previous branch..."
 git checkout - || error "Unable to return to original branch! What kind of nonsense is this?"
-
-substep "Applying stash..."
-git stash pop || error "Unable to apply stash! That might really suck."
 
 step "All done!"
