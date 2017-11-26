@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Postpunk Justin - Quick and Dirty Haskell pt 1</title>
+        <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
+    </head>
+    <body>
+        <div id="header">
+            <div id="logo">
+                <a href="../">Postpunk Justin</a>
+            </div>
+            <div id="navigation">
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </div>
+        </div>
+
+        <div id="content">
+            <h1>Quick and Dirty Haskell pt 1</h1>
+
+            <link rel="stylesheet" href="../css/monokai-spacemacs.css">
+<script src="../js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<div class="info">
+    Posted on November 24, 2017
+    
+</div>
+
+<blockquote>
+<p>This is part one of a five-part tour of a no-frills <a href="https://en.wikipedia.org/wiki/Brainfuck">Brainfuck</a> interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
+</blockquote>
+<h2 id="introduction-to-the-series">Introduction to the Series</h2>
+<p><strong>Brainfuck is a terrible language</strong>. It’s designed to be difficult to read, difficult to reason about, and difficult to write. On the other hand, it’s very easy to implement: the specification is short and straightforward, you can parse it with nothing, and you only have pointers, bytes, and indexes to keep track of at run time.</p>
+<p><strong>Haskell is a great language</strong>. It’s designed to be easy to read, easy to reason about, and easy to write. Unfortunately, a lot of Haskell’s most “interesting” applications involve a lot of language extensions, constructs, and libraries that are incredibly alienating to not only beginners, but mortals in general.</p>
+<p>I think that’s a real shame, because Haskell has a lot to offer even without Kleisli composition or profunctor optics. At its best, Haskell offers concise, readable code with a high degree of correctness.</p>
+<h3 id="prior-art">prior art</h3>
+<p>This was my second time implementing a Brainfuck interpreter. The first was in Clojure, another great functional programming language, as a weekend project that I took up on a complete whim. A few hours in, I had a project that could run “Hello, World!” and a few other simple example programs, but it would choke on anything more complicated than that.</p>
+<p>I spent another hour or two adding additional validation to try to figure out where exactly the program was going wrong and fixed a couple of bugs, but ultimately it didn’t quite get to where I wanted it to before I lost interest.</p>
+<h3 id="success-at-last">success at last</h3>
+<p>Fast forward a few months to when I’m starting to feel a lot more comfortable in Haskell, and I decided I’d go for a rematch, but this time I would have one of the most advanced type systems in the world to help me get it right.</p>
+<p>I’ll spoil the ending for you: the Haskell implementation took no longer than my initial Clojure version, but <strong>it worked absolutely perfectly the first time I ran it</strong>. Not just simple programs, but everything I could throw at the interpreter ran without a hitch.</p>
+<p>I decided to turn the code into a series of posts that would show how the type system helped me write a correct interpreter for a language I barely understood so quickly, and that’s what you’re reading now.</p>
+<p>All of the source files in the <a href="https://github.com/holguinj/brainfuck">repo</a> are now in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so what you’re reading <em>is</em> the program, piece by piece. Feel free to clone it, try it out, and tweak it all you want.</p>
+<h2 id="brainfuck.types">Brainfuck.Types</h2>
+<p>Because this is a literate Haskell file, I can’t actually skip any code. Here’s how every module starts:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Brainfuck.Types</span> <span class="kw">where</span></code></pre></div>
+<p>This particular module, <code>Brainfuck.Types</code>, has basic types that I plan to use throughout the rest of the code. It doesn’t contain <em>all</em> the types, but it does contain most of the types you’d expect to see based on the language spec.</p>
+<p>It only requires one other module:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import qualified</span> <span class="dt">Data.Vector</span> <span class="kw">as</span> <span class="dt">Vec</span></code></pre></div>
+<p>The <a href="https://hackage.haskell.org/package/vector-0.12.0.1/docs/Data-Vector.html">Data.Vector</a> module lets us represent the program as a <code>Vector</code>, rather than a linked list. If you’re familiar with Clojure’s vector type, this one is basically the same.</p>
+<p>If we stored the program statements in a list, jumping to the millionth instruction would take at least one million operations–one for every position in the list that we have to visit to get to our destination. With a vector, jumping ahead by a million takes no longer than jumping ahead by one.</p>
+<p>Other than that, you can mostly treat vectors and lists similarly, but for a few instances where you’ll see calls to <code>fromList</code> and <code>toList</code> because some other function only knows how to deal with lists and not vectors.</p>
+<p>Next up, the actual representation of Brainfuck statements as a Haskell type:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Command</span>
+  <span class="fu">=</span> <span class="dt">IncPtr</span>
+  <span class="fu">|</span> <span class="dt">DecPtr</span>
+  <span class="fu">|</span> <span class="dt">IncVal</span>
+  <span class="fu">|</span> <span class="dt">DecVal</span>
+  <span class="fu">|</span> <span class="dt">PrintChar</span>
+  <span class="fu">|</span> <span class="dt">ReadChar</span>
+  <span class="fu">|</span> <span class="dt">JumpAhead</span>
+  <span class="fu">|</span> <span class="dt">JumpBack</span>
+  <span class="kw">deriving</span> (<span class="dt">Show</span>)</code></pre></div>
+<p>The commands above correspond to <code>&gt;</code>, <code>&lt;</code>, <code>+</code>, <code>-</code>, <code>.</code>, <code>,</code>, <code>[</code>, and <code>]</code>, respectively. With that defined, we can create a type alias for a <code>Program</code> that we can use from now on:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">Program</span> <span class="fu">=</span> <span class="dt">Vec.Vector</span> <span class="dt">Command</span></code></pre></div>
+<p>There are only two other types that are relevant at the level of the specification. First of all, bytes:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">Byte</span> <span class="fu">=</span> <span class="dt">Int</span></code></pre></div>
+<p>This will be the type of both pointers and their values (since the language barely distinguishes between them). We could probably represent bytes in a bunch of other ways, but <code>Int</code> seemed the most straightforward to me. This is just a type alias, so <code>Byte</code> and <code>Int</code> will be freely interchangeable throughout the rest of the code.</p>
+<p>The only other ‘type’ (and I use that term loosely) that exists within Brainfuck is an index into the running program:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">newtype</span> <span class="dt">Index</span> <span class="fu">=</span>
+  <span class="dt">Index</span> <span class="dt">Int</span>
+  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Ord</span>, <span class="dt">Show</span>)</code></pre></div>
+<p>The only flow control in Brainfuck is <code>[</code> (conditional jump ahead) and <code>]</code> (conditional jump back). There’s no equivalent of “goto”, and thus no way of turning a notional <code>Byte</code> into a notional <code>Index</code>.</p>
+<p>Unlike <code>Int</code> and <code>Byte</code>, I <strong>do not</strong> want <code>Index</code> to be interchangeable with anything. I want to take extra care to keep this type separate from the other <code>Int</code>-based types, and that’s exactly what <code>newtype</code> is for. Now, the only way to create a new <code>Index</code> is explicitly with the <code>Index</code> type constructor, e.g., <code>Index 0</code>. No such ceremony is required (or allowed) for the <code>Byte</code> type, so hopefully that will keep things clearer later on.</p>
+<p>Also, because <code>Index</code> is a brand-new type, we need to explicitly derive instances of <code>Eq</code> (the equality typeclass), <code>Ord</code> (ordered), and <code>Show</code> (for converting an index to a string).</p>
+<h2 id="whats-next">What’s next?</h2>
+<p>We have everything we need to represent a Brainfuck program in memory, but no way to read one! Next up is the Brainfuck.Parse module, which will convert a string to a <code>Program</code>.</p>
+
+        </div>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
