@@ -55,6 +55,7 @@ substep "Committing new contents..."
 git add -A && git commit -m "automated deployment" || error "Unable to commit! Maybe a git config issue?"
 
 substep "Pushing to github pages..."
+git pull -r holguinj || error "Unable to sync with master first."
 git push holguinj HEAD || error "Unable to push! That seems weird."
 
 step "Deployed!"
