@@ -5,20 +5,30 @@ tags: haskell, static-types, beginner
 ---
 
 > ***note: This post assumes some casual familiarity with Haskell, especially with
-> (plain ol') [Algebraic Data Types].***
+> (plain ol') [algebraic data types]. If you're familiar with the way the `data`
+> keyword works, you'll be fine.***
 
 [Algebraic Data Types]: https://en.wikipedia.org/wiki/Algebraic_data_type
 
 ## a common GHC extension
 
-stuff
+I decided to write this post because GADTs are pretty popular in Haskell, but I
+found that most of the literature covers what they are and how they work, but
+not what they're actually useful for.
+
+It wasn't until I saw an [example from Haxl][Haxl] that it really hit me how
+useful GADTs can be in real-world applications. What follows is an attempt to
+distill that use case into a simplified form and show how it improves on
+standard algebraic data types.
+
+[Haxl]: https://github.com/facebook/Haxl/tree/master/example/facebook
 
 ## the goal
 
 Let's say we're working on an application that queries some live data source, and we want to:
 
-a. model queries as data
-b. run those queries in a type-safe manner
+  a. model queries as data
+  b. run those queries in a type-safe manner
 
 Ideally, we'd end up with a function that more or less works like this:
 
@@ -31,7 +41,7 @@ could take a `Query (Maybe User)` and return `IO (Maybe User)`, etc. You get the
 
 ## a first try
 
-Let's try writing a data type to represent queries:
+Let's try writing a [phantom type][] to represent queries:
 
 ```
 data Query' a =
@@ -39,11 +49,12 @@ data Query' a =
   | SelectTransactionsForUser' Int 
 ```
 
-There's something really off about this. We have a type parameter `a`, but it's
-not used in any of the constructors. So by taking advantage of the Haskell
-compiler's trusting nature, we can return a `Query' a` for whatever `a` we want.
+There's something kinda off about this. We have a type parameter `a`, but it's
+not used in any of the constructors (hence the term "phantom"). Since it doesn't
+appear in the type's definition, there are no restrictions on what it can be.
 
-That seems weird, but it does give us the ability to do this:
+In other words, the `a` in `Query' a` is whatever we claim it is. That seems
+weird, but it does give us the ability to do this:
 
 ```haskell
 selectUser' :: Int -> Query' (Maybe User)
@@ -62,6 +73,8 @@ like this:
 wtfQuery :: Query' (Either Unicorn Void)
 wtfQuery = SelectTransactionsForUser' 666
 ```
+
+[phantom type]: https://wiki.haskell.org/Phantom_type
 
 ## that kinda sucks
 
@@ -107,7 +120,7 @@ function:
 
 ```haskell
 query :: Query a -> IO a
-query (SelectUserById uid) = getUser uid {{1}}
+query (SelectUserById uid)             = getUser uid {{1}}
 query (SelectTransactionsForUser user) = getTransactions user {{2}}
 ```
 
@@ -125,4 +138,8 @@ What's interesting is that those restrictions are ultimately determined by the
 data is even better. When you use this pattern, it puts that much more emphasis
 on the data model, and lets that drive your function implementations.
 
+> **note: the complete source used in this post is available [here][gadtpost].**
+
+[gadtpost]: https://github.com/holguinj/gadtpost/blob/master/src/Main.hs
 [gadts]: https://en.wikipedia.org/wiki/Generalized_algebraic_data_type
+[phantom type]: https://wiki.haskell.org/Phantom_type
