@@ -115,6 +115,7 @@ div.info {
 
 code {
     background-color: rgba(27,31,35,0.05);
+    font-family: Menlo, Monaco, "Courier New", monospace;
 }
 
 code.hljs {
