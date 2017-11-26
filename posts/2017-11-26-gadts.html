@@ -31,7 +31,7 @@
 </div>
 
 <blockquote>
-<p><strong><em>note: This post assumes some casual familiarity with Haskell, especially with (plain ol’) <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic data types</a>. If you’re familiar with the way the <code>data</code> keyword works, you’ll be fine.</em></strong></p>
+<p><strong>Note</strong>: This post assumes some casual familiarity with Haskell, especially with (plain ol’) <a href="https://en.wikipedia.org/wiki/Algebraic_data_type">algebraic data types</a>. If you’re familiar with the way the <code>data</code> keyword works, you’ll be fine.</p>
 </blockquote>
 <h2 id="a-common-ghc-extension">a common GHC extension</h2>
 <p>I decided to write this post because GADTs are pretty popular in Haskell, but I found that most of the literature covers what they are and how they work, but not what they’re actually useful for.</p>
@@ -90,7 +90,7 @@ query (<span class="dt">SelectTransactionsForUser</span> user) <span class="fu">
 <p>If you try to return anything but <code>IO User</code> from ①, you’ll get a type error. Same if you try to return anything but <code>IO [Transaction]</code> from ②.</p>
 <p>What’s interesting is that those restrictions are ultimately determined by the <code>Query</code> data type. Functions are great, but anything we can represent in pure data is even better. When you use this pattern, it puts that much more emphasis on the data model, and lets that drive your function implementations.</p>
 <blockquote>
-<p><strong>note: the complete source used in this post is available <a href="https://github.com/holguinj/gadtpost/blob/master/src/Main.hs">here</a>.</strong></p>
+<p><strong>Note</strong>: the complete source used in this post is available <a href="https://github.com/holguinj/gadtpost/blob/master/src/Main.hs">here</a>.</p>
 </blockquote>
 
         </div>
