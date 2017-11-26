@@ -103,8 +103,9 @@ div#footer a {
 
 div.postSummary {
     margin-top: 2px;
-    margin-left: 10px;
+    margin-left: 0px;
     margin-bottom: 5px;
+    margin-right: 25px;
 }
 
 div.info {
