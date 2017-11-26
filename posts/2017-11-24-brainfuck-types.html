@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Postpunk Justin - Quick and Dirty Haskell pt 1</title>
+        <title>Postpunk Justin - 2017-11-24-brainfuck-types</title>
         <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
     </head>
     <body>
@@ -20,7 +20,7 @@
         </div>
 
         <div id="content">
-            <h1>Quick and Dirty Haskell pt 1</h1>
+            <h1>2017-11-24-brainfuck-types</h1>
 
             <link rel="stylesheet" href="../css/monokai-spacemacs.css">
 <script src="../js/highlight.pack.js"></script>
@@ -30,8 +30,9 @@
     
 </div>
 
+<h1 id="quick-and-dirty-haskell-pt-1">Quick and Dirty Haskell pt 1</h1>
 <blockquote>
-<p>This is part one of a five-part tour of a no-frills <a href="https://en.wikipedia.org/wiki/Brainfuck">Brainfuck</a> interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
+<p>This is part one of a five-part tour of a no-frills [Brainfuck][bf] interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
 </blockquote>
 <h2 id="introduction-to-the-series">Introduction to the Series</h2>
 <p><strong>Brainfuck is a terrible language</strong>. It’s designed to be difficult to read, difficult to reason about, and difficult to write. On the other hand, it’s very easy to implement: the specification is short and straightforward, you can parse it with nothing, and you only have pointers, bytes, and indexes to keep track of at run time.</p>
