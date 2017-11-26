@@ -4,9 +4,9 @@ summary: A quick, beginner-level overview of what Haskell's Generalized Algebrai
 tags: haskell, static-types, beginner
 ---
 
-> ***note: This post assumes some casual familiarity with Haskell, especially with
+> **Note**: This post assumes some casual familiarity with Haskell, especially with
 > (plain ol') [algebraic data types]. If you're familiar with the way the `data`
-> keyword works, you'll be fine.***
+> keyword works, you'll be fine.
 
 [Algebraic Data Types]: https://en.wikipedia.org/wiki/Algebraic_data_type
 
@@ -138,7 +138,7 @@ What's interesting is that those restrictions are ultimately determined by the
 data is even better. When you use this pattern, it puts that much more emphasis
 on the data model, and lets that drive your function implementations.
 
-> **note: the complete source used in this post is available [here][gadtpost].**
+> **Note**: the complete source used in this post is available [here][gadtpost].
 
 [gadtpost]: https://github.com/holguinj/gadtpost/blob/master/src/Main.hs
 [gadts]: https://en.wikipedia.org/wiki/Generalized_algebraic_data_type
