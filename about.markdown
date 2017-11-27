@@ -7,7 +7,8 @@ title: About
 I'm a professional software engineer living and working in Portland, Oregon.
 I've been writing [Clojure] full-time for over 3 years, and as a hobby for about a
 year before that. Outside of work, I tend to focus on statically-typed, purely functional
-languages like [Haskell], [Idris], and [Elm].
+languages like [Haskell], [Idris], and [Elm]. In 2016, I co-authored a book
+called [Professional Clojure][].
 
 I'm unapologetically passionate about social justice. I affirm the fundamental
 rights and equality of all people, regardless of race, ethnicity, sexuality,
@@ -18,6 +19,7 @@ proudly and unequivocally affirm that black lives matter.
 [Haskell]: https://www.haskell.org/
 [Idris]: https://www.idris-lang.org/
 [Elm]: http://elm-lang.org/
+[Professional Clojure]: http://www.wiley.com/WileyCDA/WileyTitle/productCd-1119267277.html
 
 ## the blog
 
