@@ -20,7 +20,7 @@ body {
 
 div#header {
     margin-bottom: 0px;
-    padding: 50px;
+    padding: 20px;
     background: linear-gradient(to right,#19111f 0%,#2c1e37 100%);
 }
 
@@ -140,6 +140,9 @@ code.hljs {
     padding: 10px;
     border-style: none;
     border-width: 0px;
+
+    /* don't wrap code */
+    overflow-wrap: normal;
 }
 
 blockquote {
