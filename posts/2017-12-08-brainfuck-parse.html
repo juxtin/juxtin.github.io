@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Postpunk Justin - Unfancy Haskell pt 2: Brainfuck.Parse</title>
+        <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
+    </head>
+    <body>
+        <div id="header">
+            <div id="logo">
+                <a href="../">Postpunk Justin</a>
+            </div>
+            <div id="navigation">
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </div>
+        </div>
+
+        <div id="content">
+            <h1>Unfancy Haskell pt 2: Brainfuck.Parse</h1>
+
+            <link rel="stylesheet" href="../css/monokai-spacemacs.css">
+<script src="../js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<div class="info">
+    Posted on December  8, 2017
+    
+</div>
+
+<blockquote>
+<p>This is part two of a six-part tour of a no-frills [Brainfuck][bf] interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
+</blockquote>
+<h2 id="brainfuck.parse">Brainfuck.Parse</h2>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Brainfuck.Parse</span> <span class="kw">where</span></code></pre></div>
+<p>The purpose of this module is simple and focused: take a <code>String</code> and turn it into a <code>Program</code>. Thankfully, parsing Brainfuck code is just barely more complicated than parsing binary, and requires no error handling.</p>
+<p>Even though Haskell has some great monadic parsing libraries, we’re not going to need any of them. Here’s our import list:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import           </span><span class="dt">Brainfuck.Types</span>
+<span class="kw">import qualified</span> <span class="dt">Data.Maybe</span>      <span class="kw">as</span> <span class="dt">Maybe</span>
+<span class="kw">import qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></code></pre></div>
+<p>The core of this module is a single function: <code>parseChar</code>. There are 8 significant characters in Brainfuck, and anything else is considered a comment. Since we just want to discard the comments, we’ll represent them as <code>Nothing</code> in the <code>Maybe Command</code> type:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">parseChar ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Command</span>
+parseChar c <span class="fu">=</span>
+  <span class="kw">case</span> c <span class="kw">of</span>
+    <span class="ch">'&gt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncPtr</span>
+    <span class="ch">'&lt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecPtr</span>
+    <span class="ch">'+'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncVal</span>
+    <span class="ch">'-'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecVal</span>
+    <span class="ch">'.'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">PrintChar</span>
+    <span class="ch">','</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">ReadChar</span>
+    <span class="ch">'['</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpAhead</span>
+    <span class="ch">']'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpBack</span>
+    _   <span class="ot">-&gt;</span> <span class="dt">Nothing</span></code></pre></div>
+<p>Now we just need to map over the input string with <code>parseChar</code>, discard the <code>Nothing</code>s and unwrap the <code>Just</code>s, and return a vector:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">parseProgram ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Program</span>
+parseProgram <span class="fu">=</span> Vec.fromList <span class="fu">.</span> <span class="dt">Maybe</span><span class="fu">.</span>mapMaybe parseChar</code></pre></div>
+<p><code>Maybe.mapMaybe</code> does a lot of the work here for us–it applies <code>parseChar</code> to every character individually and only keeps the <code>Just</code> values, unwrapping them to get the underlying <code>Command</code> data. It returns a list, though, so we still have to call <code>Vec.fromList</code> on the result.</p>
+<p>But that’s it! Pretty much… Well, actually there’s one more thing. A Brainfuck program isn’t <em>really</em> just a flat list of tokens–every <code>JumpAhead</code> command has to have a corresponding <code>JumpBack</code> command (and vice-versa), and we’ll need a quick way to tell which one matches up with which. In the next part of this series, we’ll look at the <code>Brainfuck.JumpMap</code> module, which handles building that map.</p>
+
+        </div>
+        <div id="footer">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </div>
+    </body>
+</html>
