@@ -52,15 +52,22 @@ div#header #navigation a:hover{
 }
 
 div#content {
-    width: 100%;
-    max-width: 768px;
-    padding-left: 32px;
-    padding-right: 32px;
-    -webkit-box-sizing: border-box;
+    /* mostly this is stolen from stephanboyer.com */
     -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+
+    margin-bottom: 5.5rem; /* footer-height + 1.5rem */
     margin-left: auto;
     margin-right: auto;
-    margin-bottom: 5.5rem; /* footer-height + 1.5rem */
+
+    max-width: 768px;
+    width: 100%;
+
+    overflow-wrap: break-word;
+    overflow-x: auto;
+
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 div#content h1{
