@@ -20,7 +20,8 @@ body {
 
 div#header {
     margin-bottom: 0px;
-    padding: 20px;
+    height: 45px;
+    padding: 1px;
     background: linear-gradient(to right,#19111f 0%,#2c1e37 100%);
 }
 
@@ -31,6 +32,7 @@ div#logo a {
     font-size: 28px;
     font-weight: bold;
     text-decoration: none;
+    padding-top: 10px;
 }
 
 div#header #navigation {
@@ -45,13 +47,18 @@ div#header #navigation a {
     margin-left: 12px;
     text-decoration: none;
     text-transform: uppercase;
+    vertical-align: middle;
+    padding-top: 24px;
+}
+
+span.navlink {
 }
 
 div#header #navigation a:hover{
   color: #FFFFFF;
 }
 
-div#content {
+div.content {
     /* mostly this is stolen from stephanboyer.com */
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
