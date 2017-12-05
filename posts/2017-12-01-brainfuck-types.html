@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-        <title>Postpunk Justin - Quick and Dirty Haskell pt 1</title>
+        <title>Postpunk Justin - Unfancy Haskell pt 1: Brainfuck.Types</title>
         <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
     </head>
     <body>
@@ -20,7 +20,7 @@
         </div>
 
         <div id="content">
-            <h1>Quick and Dirty Haskell pt 1</h1>
+            <h1>Unfancy Haskell pt 1: Brainfuck.Types</h1>
 
             <link rel="stylesheet" href="../css/monokai-spacemacs.css">
 <script src="../js/highlight.pack.js"></script>
@@ -31,9 +31,9 @@
 </div>
 
 <blockquote>
-<p>This is part one of a five-part tour of a no-frills <a href="https://en.wikipedia.org/wiki/Brainfuck">Brainfuck</a> interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
+<p>This is part one of a six-part tour of a no-frills <a href="https://en.wikipedia.org/wiki/Brainfuck">Brainfuck</a> interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
 </blockquote>
-<h2 id="introduction-to-the-series">Introduction to the Series</h2>
+<h2 id="introduction-to-the-series">introduction to the series</h2>
 <p><strong>Brainfuck is a terrible language</strong>. It’s designed to be difficult to read, difficult to reason about, and difficult to write. On the other hand, it’s very easy to implement: the specification is short and straightforward, you can parse it with nothing, and you only have pointers, bytes, and indexes to keep track of at run time.</p>
 <p><strong>Haskell is a great language</strong>. It’s designed to be easy to read, easy to reason about, and easy to write. Unfortunately, a lot of Haskell’s most “interesting” applications involve a lot of language extensions, constructs, and libraries that are incredibly alienating to not only beginners, but mortals in general.</p>
 <p>I think that’s a real shame, because Haskell has a lot to offer even without Kleisli composition or profunctor optics. At its best, Haskell offers concise, readable code with a high degree of correctness.</p>
@@ -44,7 +44,7 @@
 <p>Fast forward a few months to when I’m starting to feel a lot more comfortable in Haskell, and I decided I’d go for a rematch, but this time I would have one of the most advanced type systems in the world to help me get it right.</p>
 <p>I’ll spoil the ending for you: the Haskell implementation took no longer than my initial Clojure version, but <strong>it worked absolutely perfectly the first time I ran it</strong>. Not just simple programs, but everything I could throw at the interpreter ran without a hitch.</p>
 <p>I decided to turn the code into a series of posts that would show how the type system helped me write a correct interpreter for a language I barely understood so quickly, and that’s what you’re reading now.</p>
-<p>All of the source files in the <a href="https://github.com/holguinj/brainfuck">repo</a> are now in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so what you’re reading <em>is</em> the program, piece by piece. Feel free to clone it, try it out, and tweak it all you want.</p>
+<p>All of the source files in the <a href="https://github.com/holguinj/brainfuck">repo</a> are now in <a href="https://wiki.haskell.org/literate_programming">literate Haskell</a>, so what you’re reading <em>is</em> the program, piece by piece. Feel free to clone it, try it out, and tweak it all you want.</p>
 <h2 id="brainfuck.types">Brainfuck.Types</h2>
 <p>Because this is a literate Haskell file, I can’t actually skip any code. Here’s how every module starts:</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Brainfuck.Types</span> <span class="kw">where</span></code></pre></div>
