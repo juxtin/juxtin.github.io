@@ -13,7 +13,7 @@ isDraft :: Metadata -> Bool
 isDraft meta =
   case lookupString "draft" meta of
     Nothing -> False
-    _ -> True
+    Just s -> s == "true"
 
 --------------------------------------------------------------------------------
 -- CircleNum stuff
