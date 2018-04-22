@@ -46,7 +46,7 @@
 <span class="kw">import qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></code></pre></div>
 <p>A <code>JumpMap</code> is a <code>Data.Map.Map</code> (also known as a hash map) with <code>Index</code> keys and <code>Index</code> values:</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">JumpMap</span> <span class="fu">=</span> <span class="dt">Map.Map</span> <span class="dt">Index</span> <span class="dt">Index</span></code></pre></div>
-<p>Even though you and I know that a <code>JumpMap</code> is really just a <code>Map.Map Index Index</code>, I’d prefer to keep that fact hidden as an implementation detail. In other words, other modules in this program should be able to use <code>JumpMap</code>s for all their intended purposes without ever using <code>Data.Map</code>s functions directly.</p>
+<p>Even though you and I know that a <code>JumpMap</code> is really just a <code>Map.Map Index Index</code>, I’d prefer to keep that fact hidden as a private implementation detail. In other words, other modules in this program should be able to use <code>JumpMap</code>s for all their intended purposes without ever using <code>Data.Map</code>s functions directly.</p>
 <p>So given that fact and the fact that we want to expose an empty <code>JumpMap</code>, here’s a quick alias:</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">empty ::</span> <span class="dt">JumpMap</span>
 empty <span class="fu">=</span> Map.empty</code></pre></div>
@@ -67,7 +67,9 @@ onlyJumps (_<span class="fu">:</span>xs)                <span class="fu">=</span
 jumpMap' acc []                   []                  <span class="fu">=</span> acc
 jumpMap' acc stack                (j<span class="fu">@</span>(_,<span class="dt">Ahead</span>)<span class="fu">:</span>jumps) <span class="fu">=</span> jumpMap' acc (j<span class="fu">:</span>stack) jumps
 jumpMap' acc ((aidx,<span class="dt">Ahead</span>)<span class="fu">:</span>stack) ((bidx,<span class="dt">Back</span>)<span class="fu">:</span>jumps) <span class="fu">=</span> jumpMap' (Map.insert aidx bidx acc) stack jumps</code></pre></div>
-<p>There are a few error cases to consider as well. Calling <code>error</code> like this is considered… not great. It totally circumvents the type system and generally makes it difficult to anticipate and recover from errors. That said, it’s great for this use case because:</p>
+<h3 id="a-note-about-errors">a note about errors</h3>
+<p>The <code>jumpmap'</code> function also presents us with some of this program’s few error cases. In the interest of keeping things simple and not getting too fancy, I’ve chosen to use the built-in <code>error</code> function, which has the misleading type <code>error :: String -&gt; a</code>, and in reality just bombs out of the entire program with a given message.</p>
+<p>Calling <code>error</code> like this is considered… not great. It totally circumvents the type system and generally makes it difficult to anticipate and recover from errors. That said, it’s great for this use case because:</p>
 <ol style="list-style-type: decimal">
 <li>If we reach one of these errors then there’s nothing we can do or want to do to recover. It’s game over.</li>
 <li>Once we pass this point, we know the program is valid and we’re done with error cases.</li>
