@@ -1,0 +1,3 @@
+[submodule "submodules/brainfuck"]
+	path = submodules/brainfuck
+	url = https://github.com/juxtin/brainfuck.git
