@@ -1,4 +1,0 @@
-[submodule "submodules/brainfuck"]
-	path = submodules/brainfuck
-	url = git@github.com:juxtin/brainfuck.git
-	branch = literate
