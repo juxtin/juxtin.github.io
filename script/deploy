@@ -1,7 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+DEPLOY_BRANCH='master'
 
 # USAGE:
 #  deploy.sh [target_branch]
+
+# This script relies on some environment variables and assumptions that are only
+# present/valid in Codespaces
 
 GREEN='\033[0;32m'
 LIGHT_GREEN='\033[1;32m'
@@ -11,7 +16,7 @@ NC='\033[0m' # No Color
 if [[ -n "${1}" ]]; then
     TARGET=$1
 else
-    TARGET='master'
+    TARGET=$DEPLOY_BRANCH
 fi
 
 function step () {
@@ -30,6 +35,11 @@ function error () {
 function working_dir_clean () {
     git diff-index --quiet HEAD
 }
+
+step "Making sure we're in a Codespace"
+if [ -z "$CODESPACES" ]; then
+  error "You must be in a Codespace to deploy"
+fi
 
 step "Ensuring that the git working directory is clean..."
 if working_dir_clean; then
@@ -52,11 +62,11 @@ substep "On ${TARGET}. Copying files..."
 cp -a _site/. . || error "Unable to copy!"
 
 substep "Committing new contents..."
-git add -A && git commit -m "automated deployment" || error "Unable to commit! Maybe a git config issue?"
+git add -A && git commit -m "automated deployment $(date)" || error "Unable to commit! Maybe a git config issue?"
 
 substep "Pushing to github pages..."
-git pull -r holguinj || error "Unable to sync with master first."
-git push holguinj HEAD || error "Unable to push! That seems weird."
+git pull -r || error "Unable to sync with master first."
+git push HEAD || error "Unable to push! That seems weird."
 
 step "Deployed!"
 
