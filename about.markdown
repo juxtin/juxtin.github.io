@@ -37,4 +37,4 @@ This blog is rendered using [Hakyll], with a few extras and modifications thrown
 [Hakyll]: https://jaspervdj.be/hakyll/
 [Hakyll CSS Garden]: http://katychuang.com/hakyll-cssgarden/themes/default/?theme=haskell.org
 [highlight.js]: https://highlightjs.org/
-[GitHub]: https://github.com/holguinj/holguinj.github.io/tree/develop
+[GitHub]: https://github.com/juxtin/juxtin.github.io/tree/develop
