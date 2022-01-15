@@ -18,9 +18,16 @@ packages:
       sha256: 7b60267e8ab8a2e30260d1ad69f6182f3cfdf91c23a0035651cd8dcda2968116
   original:
     hackage: mtlparse-0.1.4.0
+- completed:
+    hackage: hakyll-4.15.1.0@sha256:df90fdb1e7e09e90557ad23a6d402ce042f820f690595e7e73db82220edcadcf,9924
+    pantry-tree:
+      size: 8860
+      sha256: 474bd1e22b8eb6c7ad8e397c1c6741204fff4b30ebc5d9d47576c43820d17e13
+  original:
+    hackage: hakyll-4.15.1.0
 snapshots:
 - completed:
-    size: 533451
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/9/0.yaml
-    sha256: 27f29b231b39ea68e967a7a4346b2693a49d77c50f41fc0c276e11189a538da7
-  original: lts-9.0
+    size: 586110
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/21.yaml
+    sha256: ce4fb8d44f3c6c6032060a02e0ebb1bd29937c9a70101c1517b92a87d9515160
+  original: lts-18.21
