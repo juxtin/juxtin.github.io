@@ -12,4 +12,4 @@ At the moment, new Codespaces start with a mostly blank slate, so until I have p
 
 # Publishing
 
-The deploy process is automated. Run `script/deploy` and it should make a new commit to the default branch with the changed content.
+The deploy process is automated. Run `script/deploy` and it should make a new commit to the gh-pages branch with the changed content.
