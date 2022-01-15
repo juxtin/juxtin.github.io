@@ -4,11 +4,11 @@ title: About
 
 ## me
 
-I'm a professional software engineer living and working in Portland, Oregon.
-I've been writing [Clojure] full-time for over 3 years, and as a hobby for about a
-year before that. Outside of work, I tend to focus on statically-typed, purely functional
-languages like [Haskell], [Idris], and [Elm]. In 2016, I co-authored a book
-called [Professional Clojure][].
+I'm a senior software engineer at [GitHub](https://github.com), living and
+working in Portland, Oregon. Although I mainly write Go and Ruby professionally,
+I was a full-time [Clojure] developer for several years. Outside of work, I tend to
+focus on statically-typed, purely functional languages like [Haskell], [Idris],
+and [Elm]. In 2016, I co-authored a book called [Professional Clojure][].
 
 I'm unapologetically passionate about social justice. I affirm the fundamental
 rights and equality of all people, regardless of race, ethnicity, sexuality,
