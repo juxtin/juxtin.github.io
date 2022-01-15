@@ -43,6 +43,9 @@ if [ -z "$CODESPACES" ]; then
   error "You must be in a Codespace to deploy"
 fi
 
+step "Running the setup script, just in case"
+script/setup || error "Setup failed. Check above for errors."
+
 step "Ensuring that the git working directory is clean..."
 if working_dir_clean; then
     substep "all changes are committed."
