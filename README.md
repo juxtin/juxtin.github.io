@@ -12,4 +12,6 @@ At the moment, new Codespaces start with a mostly blank slate and I haven't set 
 
 # Publishing
 
+To create a new post, run `./script/new-post <title>`. That script will create a new file in the posts directory with an appropriate name, prefixed with today's date. The script is a little rough, so don't feed it weird things like `:` in the post title.
+
 The deploy process is automated. Run `script/deploy` and it should make a new commit to the gh-pages branch with the changed content.

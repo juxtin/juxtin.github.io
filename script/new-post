@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+title="$*"
+
+if [ -z "$title" ]; then
+  echo "Usage: $0 <title>"
+  exit 1
+fi
+
+# Note: ${title,,} means lowercase $title
+filename="posts/$(date +%Y-%m-%d)-$(echo "${title,,}" | tr ' ' '-').markdown"
+cat <<EOF > $filename
+---
+title: $title
+summary: 
+tags: 
+---
+EOF
+
+echo "Created $filename"
