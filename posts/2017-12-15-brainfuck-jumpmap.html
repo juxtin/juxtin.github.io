@@ -39,59 +39,59 @@
 <p>Beyond parsing, there’s a single pre-processing step that we’ll need in order to execute a given program: we need to map out which jump instructions (<code>[</code> and <code>]</code>) match with which others.</p>
 <p>To take the smallest possible example: given the program <code>[JumpAhead, JumpBack]</code>, we want to know that the <code>JumpAhead</code> at index 0 matches the <code>JumpBack</code> at index 1, and vice-versa.</p>
 <p>We start with some standard imports:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Brainfuck.JumpMap</span> <span class="kw">where</span>
-
-<span class="kw">import           </span><span class="dt">Brainfuck.Types</span>
-<span class="kw">import qualified</span> <span class="dt">Data.Map</span>        <span class="kw">as</span> <span class="dt">Map</span>
-<span class="kw">import qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Brainfuck.JumpMap</span> <span class="kw">where</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Brainfuck.Types</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Map</span>        <span class="kw">as</span> <span class="dt">Map</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></span></code></pre></div>
 <p>A <code>JumpMap</code> is a <code>Data.Map.Map</code> (also known as a hash map) with <code>Index</code> keys and <code>Index</code> values:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">JumpMap</span> <span class="fu">=</span> <span class="dt">Map.Map</span> <span class="dt">Index</span> <span class="dt">Index</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">JumpMap</span> <span class="ot">=</span> <span class="dt">Map.Map</span> <span class="dt">Index</span> <span class="dt">Index</span></span></code></pre></div>
 <p>Even though you and I know that a <code>JumpMap</code> is really just a <code>Map.Map Index Index</code>, I’d prefer to keep that fact hidden as a private implementation detail. In other words, other modules in this program should be able to use <code>JumpMap</code>s for all their intended purposes without ever using <code>Data.Map</code>s functions directly.</p>
 <p>So given that fact and the fact that we want to expose an empty <code>JumpMap</code>, here’s a quick alias:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">empty ::</span> <span class="dt">JumpMap</span>
-empty <span class="fu">=</span> Map.empty</code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">empty ::</span> <span class="dt">JumpMap</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>empty <span class="ot">=</span> Map.empty</span></code></pre></div>
 <p>There are exactly two types of jump operations we’re concerned with: <code>[</code> and <code>]</code>–a jump ahead and a jump back. Here’s a data type to represent them:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Jump</span> <span class="fu">=</span> <span class="dt">Ahead</span> <span class="fu">|</span> <span class="dt">Back</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Jump</span> <span class="ot">=</span> <span class="dt">Ahead</span> <span class="op">|</span> <span class="dt">Back</span></span></code></pre></div>
 <p>As you may recall from <a href="../posts/2017-11-26-brainfuck-types.html">part one</a>, we’ve already defined a <code>Program</code> type, which is a vector of commands. We’re enhancing that type here, so let’s call the thing we’re constructing a <code>NumberedProgram</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">NumberedProgram</span> <span class="fu">=</span> [(<span class="dt">Index</span>, <span class="dt">Command</span>)]</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">NumberedProgram</span> <span class="ot">=</span> [(<span class="dt">Index</span>, <span class="dt">Command</span>)]</span></code></pre></div>
 <p>Next, we’re going to want a list of every jump in the program, in the form of <code>(Index, Jump)</code> pairs. This function iterates through a <code>NumberedProgram</code>, converting <code>JumpAhead</code> and <code>JumpBack</code> commands into <code>Ahead</code> and <code>Back</code> jumps, discarding the rest:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">NumberedJump</span> <span class="fu">=</span> (<span class="dt">Index</span>, <span class="dt">Jump</span>)
-
-<span class="ot">onlyJumps ::</span> <span class="dt">NumberedProgram</span> <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>]
-onlyJumps [] <span class="fu">=</span> []
-onlyJumps ((idx, <span class="dt">JumpAhead</span>)<span class="fu">:</span>xs) <span class="fu">=</span> (idx, <span class="dt">Ahead</span>) <span class="fu">:</span> onlyJumps xs
-onlyJumps ((idx, <span class="dt">JumpBack</span>)<span class="fu">:</span>xs)  <span class="fu">=</span> (idx, <span class="dt">Back</span>) <span class="fu">:</span> onlyJumps xs
-onlyJumps (_<span class="fu">:</span>xs)                <span class="fu">=</span> onlyJumps xs</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> <span class="dt">NumberedJump</span> <span class="ot">=</span> (<span class="dt">Index</span>, <span class="dt">Jump</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ot">onlyJumps ::</span> <span class="dt">NumberedProgram</span> <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>onlyJumps [] <span class="ot">=</span> []</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>onlyJumps ((idx, <span class="dt">JumpAhead</span>)<span class="op">:</span>xs) <span class="ot">=</span> (idx, <span class="dt">Ahead</span>) <span class="op">:</span> onlyJumps xs</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>onlyJumps ((idx, <span class="dt">JumpBack</span>)<span class="op">:</span>xs)  <span class="ot">=</span> (idx, <span class="dt">Back</span>) <span class="op">:</span> onlyJumps xs</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>onlyJumps (_<span class="op">:</span>xs)                <span class="ot">=</span> onlyJumps xs</span></code></pre></div>
 <p>The next function, <code>jumpMap'</code> is a real doozy. It does the hard part of building a jump map: figuring out which <code>[</code> goes with which <code>]</code>. It uses a stack to keep track of open <code>[</code>s, popping them off when it reaches a <code>]</code>:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">jumpMap' ::</span> <span class="dt">JumpMap</span> <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>] <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>] <span class="ot">-&gt;</span> <span class="dt">JumpMap</span>
-jumpMap' acc []                   []                  <span class="fu">=</span> acc
-jumpMap' acc stack                (j<span class="fu">@</span>(_,<span class="dt">Ahead</span>)<span class="fu">:</span>jumps) <span class="fu">=</span> jumpMap' acc (j<span class="fu">:</span>stack) jumps
-jumpMap' acc ((aidx,<span class="dt">Ahead</span>)<span class="fu">:</span>stack) ((bidx,<span class="dt">Back</span>)<span class="fu">:</span>jumps) <span class="fu">=</span> jumpMap' (Map.insert aidx bidx acc) stack jumps</code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ot">jumpMap' ::</span> <span class="dt">JumpMap</span> <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>] <span class="ot">-&gt;</span> [<span class="dt">NumberedJump</span>] <span class="ot">-&gt;</span> <span class="dt">JumpMap</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>jumpMap' acc []                   []                  <span class="ot">=</span> acc</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>jumpMap' acc stack                (j<span class="op">@</span>(_,<span class="dt">Ahead</span>)<span class="op">:</span>jumps) <span class="ot">=</span> jumpMap' acc (j<span class="op">:</span>stack) jumps</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>jumpMap' acc ((aidx,<span class="dt">Ahead</span>)<span class="op">:</span>stack) ((bidx,<span class="dt">Back</span>)<span class="op">:</span>jumps) <span class="ot">=</span> jumpMap' (Map.insert aidx bidx acc) stack jumps</span></code></pre></div>
 <h3 id="a-note-about-errors">a note about errors</h3>
 <p>The <code>jumpmap'</code> function also presents us with some of this program’s few error cases. In the interest of keeping things simple and not getting too fancy, I’ve chosen to use the built-in <code>error</code> function, which has the misleading type <code>error :: String -&gt; a</code>, and in reality just bombs out of the entire program with a given message.</p>
 <p>Calling <code>error</code> like this is considered… not great. It totally circumvents the type system and generally makes it difficult to anticipate and recover from errors. That said, it’s great for this use case because:</p>
-<ol style="list-style-type: decimal">
+<ol type="1">
 <li>If we reach one of these errors then there’s nothing we can do or want to do to recover. It’s game over.</li>
 <li>Once we pass this point, we know the program is valid and we’re done with error cases.</li>
 </ol>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">jumpMap' _   []                   ((idx,<span class="dt">Back</span>)<span class="fu">:</span>_)      <span class="fu">=</span> error <span class="fu">$</span> <span class="st">&quot;no matching '[' for ']' at &quot;</span> <span class="fu">++</span> show idx <span class="fu">++</span> <span class="st">&quot;!&quot;</span>
-jumpMap' _   ((idx,_)<span class="fu">:</span>_)          []                  <span class="fu">=</span> error <span class="fu">$</span> <span class="st">&quot;no matching ']' for '[' at &quot;</span> <span class="fu">++</span> show idx <span class="fu">++</span> <span class="st">&quot;!&quot;</span>
-jumpMap' _   _                    _                   <span class="fu">=</span> error <span class="st">&quot;pretty sure this is a bad situation, but I don't know how to put it into words.&quot;</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>jumpMap' _   []                   ((idx,<span class="dt">Back</span>)<span class="op">:</span>_)      <span class="ot">=</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;no matching '[' for ']' at &quot;</span> <span class="op">++</span> <span class="fu">show</span> idx <span class="op">++</span> <span class="st">&quot;!&quot;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>jumpMap' _   ((idx,_)<span class="op">:</span>_)          []                  <span class="ot">=</span> <span class="fu">error</span> <span class="op">$</span> <span class="st">&quot;no matching ']' for '[' at &quot;</span> <span class="op">++</span> <span class="fu">show</span> idx <span class="op">++</span> <span class="st">&quot;!&quot;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>jumpMap' _   _                    _                   <span class="ot">=</span> <span class="fu">error</span> <span class="st">&quot;pretty sure this is a bad situation, but I don't know how to put it into words.&quot;</span></span></code></pre></div>
 <p>The pseudo-jump map created above only maps from <code>Ahead</code>s to <code>Back</code>s, but we need a map that goes both ways. Here’s a quick function to make a unidirectional map bidirectional:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">bidirectionalize ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Map.Map</span> a a <span class="ot">-&gt;</span> <span class="dt">Map.Map</span> a a
-bidirectionalize m <span class="fu">=</span>
-  <span class="kw">let</span> kvs <span class="fu">=</span> Map.toList m
-      vks <span class="fu">=</span> map (\(k, v) <span class="ot">-&gt;</span> (v, k)) kvs
-  <span class="kw">in</span> Map.fromList (kvs <span class="fu">++</span> vks)</code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ot">bidirectionalize ::</span> <span class="dt">Ord</span> a <span class="ot">=&gt;</span> <span class="dt">Map.Map</span> a a <span class="ot">-&gt;</span> <span class="dt">Map.Map</span> a a</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>bidirectionalize m <span class="ot">=</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> kvs <span class="ot">=</span> Map.toList m</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>      vks <span class="ot">=</span> <span class="fu">map</span> (\(k, v) <span class="ot">-&gt;</span> (v, k)) kvs</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> Map.fromList (kvs <span class="op">++</span> vks)</span></code></pre></div>
 <p>Finally, bring it all together and write a function that builds a <code>JumpMap</code> for a given <code>Program</code>.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">makeJumpMap ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">JumpMap</span>
-makeJumpMap prog <span class="fu">=</span>
-  <span class="kw">let</span> numbered <span class="fu">=</span> zip indexes (Vec.toList prog)
-      jumps <span class="fu">=</span> onlyJumps numbered
-  <span class="kw">in</span> bidirectionalize <span class="fu">$</span> jumpMap' Map.empty [] jumps
-  <span class="kw">where</span>
-<span class="ot">    indexes ::</span> [<span class="dt">Index</span>]
-    indexes <span class="fu">=</span> map <span class="dt">Index</span> ([<span class="dv">0</span> <span class="fu">..</span>]<span class="ot"> ::</span> [<span class="dt">Int</span>])</code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ot">makeJumpMap ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">JumpMap</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>makeJumpMap prog <span class="ot">=</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> numbered <span class="ot">=</span> <span class="fu">zip</span> indexes (Vec.toList prog)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>      jumps <span class="ot">=</span> onlyJumps numbered</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">in</span> bidirectionalize <span class="op">$</span> jumpMap' Map.empty [] jumps</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">where</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ot">    indexes ::</span> [<span class="dt">Index</span>]</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    indexes <span class="ot">=</span> <span class="fu">map</span> <span class="dt">Index</span> ([<span class="dv">0</span> <span class="op">..</span>]<span class="ot"> ::</span> [<span class="dt">Int</span>])</span></code></pre></div>
 <h2 id="whats-next">what’s next?</h2>
 <p>We now have a complete, type-safe, and verified-valid Brainfuck program in memory. We’re halfway there! Next, we’ll start laying the groundwork for actually executing a program by building a representation of runtime memory.</p>
 

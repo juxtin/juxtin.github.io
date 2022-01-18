@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Postpunk Justin - What you should know about MySQL's LAST_INSERT_ID()</title>
+        <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
+    </head>
+    <body>
+        <div id="header">
+            <div class="content">
+                <div id="logo">
+                    <a href="../">Postpunk Justin</a>
+                </div>
+                <div id="navigation">
+                    <span class="navlink"><a href="../">Home</a></span>
+                    <span class="navlink"><a href="../about.html">About</a></span>
+                    <span class="navlink"><a href="../contact.html">Contact</a></span>
+                    <span class="navlink"><a href="../archive.html">Archive</a></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content" id="content">
+            <h1>What you should know about MySQL's LAST_INSERT_ID()</h1>
+
+            <link rel="stylesheet" href="../css/monokai-spacemacs.css">
+<script src="../js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<div class="info">
+    Posted on January 17, 2022
+    
+</div>
+
+<h2 id="how-i-got-into-this-mess">how I got into this mess</h2>
+<p>If you’re writing MySQL without the “benefit” of an <a href="https://en.wikipedia.org/wiki/Object-relational_mapping">ORM</a>, you may find yourself in a situation where you need to know the automatically generated ID of the last inserted row.</p>
+<p>More civilized databases like Postgres let you specify in the INSERT statement what you want to be returned, but MySQL still hasn’t made it that easy. When I came across this, the advice I found all over the internet was to use the built-in function <code>LAST_INSERT_ID()</code> to get the ID of the last inserted row.</p>
+<p>Frankly, that rubs me the wrong way. A couple of issues come to mind immediately:</p>
+<ol type="1">
+<li>What if something else gets inserted before I manage to call <code>LAST_INSERT_ID()</code>?</li>
+<li>Why should I have to incur the cost of another entire query just to get the ID?</li>
+</ol>
+<h2 id="can-i-trust-it">can I trust it?</h2>
+<p>For problem 1, the <a href="https://dev.mysql.com/doc/refman/8.0/en/information-functions.html#function_last-insert-id">official docs</a> are somewhat reassuring:</p>
+<blockquote>
+<p>The ID that was generated is maintained in the server on a <strong><em>per-connection</em></strong> basis. This means that the value returned by the function to a given client is the first <code>AUTO_INCREMENT</code> value generated for most recent statement affecting an <code>AUTO_INCREMENT</code> column <strong><em>by that client</em></strong>. This value cannot be affected by other clients, even if they generate <code>AUTO_INCREMENT</code> values of their own. This behavior ensures that each client can retrieve its own ID without concern for the activity of other clients, and without the need for locks or transactions.</p>
+</blockquote>
+<p>Translation: “don’t worry, we manage the implicit state here so you don’t have to.” And sure, you’re already trusting MySQL with your data, so why not trust it to return the correct ID?</p>
+<h3 id="what-about-vitess">what about Vitess?</h3>
+<p>But what if you <em>can’t</em> actually trust the assumptions made by MySQL? This isn’t a hypothetical. If you’re using <a href="https://vitess.io/">Vitess</a>, then you should be ready for subtle differences compared to real MySQL. I found this somewhat alarming tidbit in the <a href="https://vitess.io/docs/12.0/concepts/query-rewriting/#connection-pooling">Vitess docs</a> during my research:</p>
+<blockquote>
+<p>When a tablet talks with a MySQL to execute a query on behalf of a user, it does not use a dedicated connection per user, and instead will share the underlying connection between users. This means that it’s not safe to store any state in the session as you can’t be sure it will continue executing queries on the same connection, and you can’t be sure if this connection will be used by other users later on.</p>
+</blockquote>
+<p>At first glance, that looks like it completely invalidates the assumptions made by <code>LAST_INSERT_ID()</code>. If Vitess is sharing connections and splitting queries across them, then it stands to reason that it could get an ID from a different connection than the one used to execute the query.</p>
+<p>Older versions of Vitess did have some limitations here, but luckily that has been fixed. The <code>LAST_INSERT_ID()</code> function is important enough to have been treated as <a href="https://github.com/vitessio/vitess/issues/3668">a special case in Vitess</a>. Queries that use <code>LAST_INSERT_ID()</code> are rewritten to instead get the value in a safe, reliable way from vtgate.</p>
+<p>As long as you’re not using a truly ancient version of Vitess, you should be fine.</p>
+<h3 id="whats-the-worst-case-scenario">what’s the worst-case scenario?</h3>
+<p>As an experiment, I did actually try to write an example service that got the wrong results from <code>LAST_INSERT_ID()</code>. It’s not impossible. What you have to do is go out of your way to share an open connection object between multiple threads that are each making inserts and retrieving the new IDs.</p>
+<p>Most of the time, this actually causes threads to crash as they fight over active connections and eventually get only errors back, but sometimes I did in fact get the wrong IDs returned.</p>
+<p>I think it’s pretty unlikely that someone is going to write that code accidentally, and if they do then the rampant crashing will probably get them to reexamine it pretty quickly.</p>
+<h2 id="but-i-still-want-to-avoid-it">but I still want to avoid it</h2>
+<p>So far I’ve convinced myself (if not also you) that <code>LAST_INSERT_ID()</code> <em>works</em> about as well as they say it will. But that doesn’t mean I have to like it! I still feel annoyed that I need to make another round-trip call to the database to get the ID. Shouldn’t there be another way?</p>
+<h3 id="the-ok_packet">the OK_Packet</h3>
+<p>It turns out that the answer is part of the <a href="https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basics.html">MySQL protocol</a> rather than SQL queries. Successful queries don’t <em>just</em> have a results set that gets exposed to the client, they also come bound with the <a href="https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_ok_packet.html">OK_Packet</a>. This is the packet that contains the ID of the last inserted row.</p>
+<p>A decent MySQL client library will parse this packet and make the ID available to you. Look at the various query functions/methods that it exposes and find one that returns the <code>last_insert_id</code> property. If you don’t find one, then either find another library or roll up your sleeves and make a pull request to add it.</p>
+<h2 id="conclusion">conclusion</h2>
+<p>The <code>LAST_INSERT_ID()</code> function is probably fine to use, but you can and should avoid it anyway. It’s certainly not going to make your code <em>more</em> reliable, and it has a needless performance cost. Instead, get the <code>last_insert_id</code> from the OK_Packet via your client library.</p>
+
+        </div>
+        <div id="footer">
+            <div class="content">
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+            </div>
+        </div>
+    </body>
+</html>

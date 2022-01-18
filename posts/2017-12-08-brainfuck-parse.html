@@ -36,28 +36,28 @@
 <p>This is part two of a six-part tour of a no-frills <a href="https://en.wikipedia.org/wiki/Brainfuck">Brainfuck</a> interpreter in Haskell. The source code for this project is available on <a href="https://github.com/holguinj/brainfuck">github</a>, and each post is written in <a href="https://wiki.haskell.org/Literate_programming">literate Haskell</a>, so you can execute these documents directly with GHC.</p>
 </blockquote>
 <h2 id="brainfuck.parse">Brainfuck.Parse</h2>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Brainfuck.Parse</span> <span class="kw">where</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> <span class="dt">Brainfuck.Parse</span> <span class="kw">where</span></span></code></pre></div>
 <p>The purpose of this module is very focused: take a <code>String</code> and turn it into a <code>Program</code>. Thankfully, parsing Brainfuck code is just barely more complicated than parsing binary, and requires no error handling.</p>
 <p>Even though Haskell has some great monadic parsing libraries, we’re not going to need any of them. Here’s our import list:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import           </span><span class="dt">Brainfuck.Types</span>
-<span class="kw">import qualified</span> <span class="dt">Data.Maybe</span>      <span class="kw">as</span> <span class="dt">Maybe</span>
-<span class="kw">import qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span>           <span class="dt">Brainfuck.Types</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Maybe</span>      <span class="kw">as</span> <span class="dt">Maybe</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">import</span> <span class="kw">qualified</span> <span class="dt">Data.Vector</span>     <span class="kw">as</span> <span class="dt">Vec</span></span></code></pre></div>
 <p>The core of this module is a single function: <code>parseChar</code>. There are 8 significant characters in Brainfuck, and anything else is considered a comment. Since we just want to discard the comments, we’ll represent them as <code>Nothing</code> in the <code>Maybe Command</code> type:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">parseChar ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Command</span>
-parseChar c <span class="fu">=</span>
-  <span class="kw">case</span> c <span class="kw">of</span>
-    <span class="ch">'&gt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncPtr</span>
-    <span class="ch">'&lt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecPtr</span>
-    <span class="ch">'+'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncVal</span>
-    <span class="ch">'-'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecVal</span>
-    <span class="ch">'.'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">PrintChar</span>
-    <span class="ch">','</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">ReadChar</span>
-    <span class="ch">'['</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpAhead</span>
-    <span class="ch">']'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpBack</span>
-    _   <span class="ot">-&gt;</span> <span class="dt">Nothing</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseChar ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Command</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>parseChar c <span class="ot">=</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">case</span> c <span class="kw">of</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'&gt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncPtr</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'&lt;'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecPtr</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'+'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">IncVal</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'-'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">DecVal</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'.'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">PrintChar</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="ch">','</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">ReadChar</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="ch">'['</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpAhead</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="ch">']'</span> <span class="ot">-&gt;</span> <span class="dt">Just</span> <span class="dt">JumpBack</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    _   <span class="ot">-&gt;</span> <span class="dt">Nothing</span></span></code></pre></div>
 <p>Now we just need to map over the input string with <code>parseChar</code>, discard the <code>Nothing</code>s and unwrap the <code>Just</code>s, and return a vector:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">parseProgram ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Program</span>
-parseProgram <span class="fu">=</span> Vec.fromList <span class="fu">.</span> <span class="dt">Maybe</span><span class="fu">.</span>mapMaybe parseChar</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">parseProgram ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Program</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>parseProgram <span class="ot">=</span> Vec.fromList <span class="op">.</span> <span class="dt">Maybe</span><span class="op">.</span>mapMaybe parseChar</span></code></pre></div>
 <p><code>Maybe.mapMaybe</code> does a lot of the work here for us–it applies <code>parseChar</code> to every character individually and only keeps the <code>Just</code> values, unwrapping them to get the underlying <code>Command</code> data. It returns a list, though, so we still have to call <code>Vec.fromList</code> on the result.</p>
 <p>But that’s it! …pretty much. Well, actually there’s one more thing. A Brainfuck program isn’t <em>really</em> just a flat list of tokens–every <code>JumpAhead</code> command has to have a corresponding <code>JumpBack</code> command (and vice-versa), and we’ll need a quick way to tell which one matches up with which. In the next part of this series, we’ll look at the <code>Brainfuck.JumpMap</code> module, which handles building that map.</p>
 

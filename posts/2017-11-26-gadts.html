@@ -40,12 +40,12 @@
 <p>It wasn’t until I saw an <a href="https://github.com/facebook/Haxl/tree/master/example/facebook">example from Haxl</a> that it really hit me how useful GADTs can be in real-world applications. What follows is an attempt to distill that use case into a simplified form and show how it improves on standard algebraic data types.</p>
 <h2 id="the-goal">the goal</h2>
 <p>Let’s say we’re working on an application that queries some live data source, and we want to:</p>
-<ol style="list-style-type: lower-alpha">
+<ol type="a">
 <li>model queries as data</li>
 <li>run those queries in a type-safe manner</li>
 </ol>
 <p>Ideally, we’d end up with a function that more or less works like this:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">runQuery ::</span> <span class="dt">Query</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ot">runQuery ::</span> <span class="dt">Query</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</span></code></pre></div>
 <p>In other words, it might take a <code>Query [Transaction]</code> and return an <code>IO [Transaction]</code>, or it could take a <code>Query (Maybe User)</code> and return <code>IO (Maybe User)</code>, etc. You get the picture.</p>
 <h2 id="a-first-try">a first try</h2>
 <p>Let’s try writing a <a href="https://wiki.haskell.org/Phantom_type">phantom type</a> to represent queries:</p>
@@ -54,23 +54,23 @@
   | SelectTransactionsForUser' Int </code></pre>
 <p>There’s something kinda off about this. We have a type parameter <code>a</code>, but it’s not used in any of the constructors (hence the term “phantom”). Since it doesn’t appear in the type’s definition, there are no restrictions on what it can be.</p>
 <p>In other words, the <code>a</code> in <code>Query' a</code> is whatever we claim it is. That seems weird, but it does give us the ability to do this:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">selectUser' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Query'</span> (<span class="dt">Maybe</span> <span class="dt">User</span>)
-selectUser' <span class="fu">=</span> <span class="dt">SelectUserById'</span>
-
-<span class="ot">selectTransactions' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Query'</span> [<span class="dt">Transaction</span>]
-selectTransactions' <span class="fu">=</span> <span class="dt">SelectTransactionsForUser'</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ot">selectUser' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Query'</span> (<span class="dt">Maybe</span> <span class="dt">User</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>selectUser' <span class="ot">=</span> <span class="dt">SelectUserById'</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ot">selectTransactions' ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Query'</span> [<span class="dt">Transaction</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>selectTransactions' <span class="ot">=</span> <span class="dt">SelectTransactionsForUser'</span></span></code></pre></div>
 <p>With these helper functions, we technically have everything we need in order to write <code>runQuery</code>, but nothing’s stopping someone from writing up some garbage like this:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">wtfQuery ::</span> <span class="dt">Query'</span> (<span class="dt">Either</span> <span class="dt">Unicorn</span> <span class="dt">Void</span>)
-wtfQuery <span class="fu">=</span> <span class="dt">SelectTransactionsForUser'</span> <span class="dv">666</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ot">wtfQuery ::</span> <span class="dt">Query'</span> (<span class="dt">Either</span> <span class="dt">Unicorn</span> <span class="dt">Void</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>wtfQuery <span class="ot">=</span> <span class="dt">SelectTransactionsForUser'</span> <span class="dv">666</span></span></code></pre></div>
 <h2 id="that-kinda-sucks">that kinda sucks</h2>
 <p>With the above <code>Query' a</code> type, any relation between the type parameter <code>a</code> and the actual result is purely a mirage. Why even have types at all if they’re just smoke and mirrors?</p>
 <h2 id="use-a-dang-gadt">use a dang GADT</h2>
 <p>This is exactly the situation that GADTs (<a href="https://en.wikipedia.org/wiki/Generalized_algebraic_data_type">Generalized Algebraic Data Types</a>) are made for.</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- requires {-# LANGUAGE GADTs #-}</span>
-
-<span class="kw">data</span> <span class="dt">Query</span> a <span class="kw">where</span> ①
-  <span class="dt">SelectUserById</span><span class="ot">            ::</span> <span class="dt">Int</span>  <span class="ot">-&gt;</span> <span class="dt">Query</span> <span class="dt">User</span> ②
-  <span class="dt">SelectTransactionsForUser</span><span class="ot"> ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Query</span> [<span class="dt">Transaction</span>]</code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- requires {-# LANGUAGE GADTs #-}</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> <span class="dt">Query</span> a <span class="kw">where</span> ①</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">SelectUserById</span><span class="ot">            ::</span> <span class="dt">Int</span>  <span class="ot">-&gt;</span> <span class="dt">Query</span> <span class="dt">User</span> ②</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">SelectTransactionsForUser</span><span class="ot"> ::</span> <span class="dt">User</span> <span class="ot">-&gt;</span> <span class="dt">Query</span> [<span class="dt">Transaction</span>]</span></code></pre></div>
 <p>Let’s start by comparing <code>Query</code> (the GADT version) to the bogus <code>Query'</code> definition from the beginning of this post. First of all, there’s the <code>where</code> keyword (①), which is GADT-specific syntax that replaces the <code>=</code> in a normal ADT definition.</p>
 <p>Second, and much more importantly, the constructors are fully annotated with their types. If you look at ②, you can see that <code>SelectUserById</code> can only ever return a <code>Query User</code>.</p>
 <p>The only other constructor returns <code>Query [Transaction]</code>, so the only possible forms of <code>Query a</code> are:</p>
@@ -81,9 +81,9 @@ wtfQuery <span class="fu">=</span> <span class="dt">SelectTransactionsForUser'</
 <p>We don’t have to worry about absurd cases like <code>Query (Either Unicorn Void)</code> because there’s simply no way to construct them. We don’t need to play weird “hide the constructor” games, because these constructors are thoroughly safe.</p>
 <h2 id="tying-it-together">tying it together</h2>
 <p>With the new <code>Query</code> type defined, we can now use it to write the <code>query</code> function:</p>
-<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">query ::</span> <span class="dt">Query</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a
-query (<span class="dt">SelectUserById</span> uid)             <span class="fu">=</span> getUser uid ①
-query (<span class="dt">SelectTransactionsForUser</span> user) <span class="fu">=</span> getTransactions user ②</code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ot">query ::</span> <span class="dt">Query</span> a <span class="ot">-&gt;</span> <span class="dt">IO</span> a</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>query (<span class="dt">SelectUserById</span> uid)             <span class="ot">=</span> getUser uid ①</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>query (<span class="dt">SelectTransactionsForUser</span> user) <span class="ot">=</span> getTransactions user ②</span></code></pre></div>
 <p>The type <code>Query a -&gt; IO a</code> looks very general, but it really expands to just two potential cases:</p>
 <ul>
 <li><code>Query User -&gt; IO User</code> (①)</li>
