@@ -20,4 +20,7 @@ executable ppj-blog
   build-depends:       base >= 4.7 && < 5,
                        hakyll,
                        regexpr == 0.5.4,
-                       text >= 1.2.2.2
+                       text >= 1.2.2.2,
+                       pandoc >= 2.14,
+                       pandoc-types >= 1.17
+                       

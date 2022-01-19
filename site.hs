@@ -4,6 +4,10 @@ import           Data.Char    (isDigit, chr)
 import           Data.Monoid  (mappend)
 import           Hakyll
 import qualified Text.RegexPR as RE
+import qualified Text.Pandoc as TP
+import Text.Pandoc (Pandoc)
+import Text.Pandoc.Walk (walk)
+import qualified Data.Text as T
 
 
 --------------------------------------------------------------------------------
@@ -35,7 +39,7 @@ substituteCircleNums re = RE.gsubRegexPRBy re tryToCircle
     tryToCircle :: String -> String
     tryToCircle s =
       let
-        digits = filter isDigit s
+        digits = Prelude.filter isDigit s
         i = read digits :: Integer
       in
         case circledNumberCode i of
@@ -55,6 +59,27 @@ mapPostBodies f post = do
 
 numberTagsInPosts :: Item String -> Compiler (Item String)
 numberTagsInPosts = mapPostBodies (substituteCircleNumsHTML . substituteCircleNumsRaw)
+
+--------------------------------------------------------------------------------
+-- Mermaidify stuff
+
+-- | A Pandoc transformation that turns code blocks marked with the class "mermaid"
+-- into raw HTML <div>s ready to be mermaidified by the browser with mermaid.js.
+mermaidify :: Pandoc -> Pandoc
+mermaidify = walk mermaidCodeBlock
+
+-- | If the block contains the class "mermaid", then replace it with a <div>
+-- containing the block's contents.
+-- Note: extra attributes are currently ignored, but they shouldn't be hard
+-- to take advantage of.
+-- The syntax looks like this: ```{.mermaid myattr=myval}
+-- which yields a `keyvals` of `[("myattr", "myval")]`
+mermaidCodeBlock :: TP.Block -> TP.Block
+mermaidCodeBlock (TP.CodeBlock (id, classes, keyvals) code) =
+  if "mermaid" `elem` classes
+    then TP.RawBlock "html" $ "<div caption=\"example thingy\" class=\"" <> T.unwords classes <> "\">" <> code <> "</div>"
+    else TP.CodeBlock (id, classes, keyvals) code 
+mermaidCodeBlock x = x
 
 --------------------------------------------------------------------------------
 -- Routes
@@ -127,8 +152,11 @@ postCtx =
 postCompiler :: Rules ()
 postCompiler = do
   route $ setExtension "html"
-  compile $ pandocCompiler
+  compile $ pandocCompilerWithTransform readerOptions writerOptions mermaidify
         >>= loadAndApplyTemplate "templates/post.html"    postCtx
         >>= loadAndApplyTemplate "templates/default.html" postCtx
         >>= relativizeUrls
         >>= numberTagsInPosts
+    where
+      readerOptions = defaultHakyllReaderOptions
+      writerOptions = defaultHakyllWriterOptions 
