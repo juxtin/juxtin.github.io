@@ -77,7 +77,7 @@ mermaidify = walk mermaidCodeBlock
 mermaidCodeBlock :: TP.Block -> TP.Block
 mermaidCodeBlock (TP.CodeBlock (id, classes, keyvals) code) =
   if "mermaid" `elem` classes
-    then TP.RawBlock "html" $ "<div caption=\"example thingy\" class=\"" <> T.unwords classes <> "\">" <> code <> "</div>"
+    then TP.RawBlock "html" $ "<div class=\"" <> T.unwords classes <> "\">" <> code <> "</div>"
     else TP.CodeBlock (id, classes, keyvals) code 
 mermaidCodeBlock x = x
 
