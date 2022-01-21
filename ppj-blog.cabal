@@ -23,4 +23,3 @@ executable ppj-blog
                        text >= 1.2.2.2,
                        pandoc >= 2.14,
                        pandoc-types >= 1.17
-                       
