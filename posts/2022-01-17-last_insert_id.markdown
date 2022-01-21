@@ -72,7 +72,7 @@ from vtgate.
 sequenceDiagram
     actor Alice
     actor Bob
-    participant vt as vtablet
+    participant vt as vtgate
     participant DB as MySQL
     Alice->>vt: INSERT c
     vt->>DB: INSERT c
