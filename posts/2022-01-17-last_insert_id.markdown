@@ -31,6 +31,24 @@ Translation: "don't worry, we manage the implicit state here so you don't have
 to." And sure, you're already trusting MySQL with your data, so why not trust it
 to return the correct ID?
 
+Here's a sequence diagram showing how `last_insert_id()` works with multiple clients,
+according to the documentation:
+
+```mermaid
+sequenceDiagram
+    actor Alice
+    participant DB as MySQL
+    actor Bob
+    Alice->>DB: INSERT a
+    Note right of Alice: a.id = 1
+    Bob->>DB: INSERT b
+    Note left of Bob: b.id = 2
+    Alice->>DB: SELECT last_insert_id()
+    DB-->>Alice: last_insert_id = 1
+    Bob->>DB: SELECT last_insert_id()
+    DB-->>Bob: last_insert_id = 2
+```
+
 ### what about Vitess?
 
 But what if you _can't_ actually trust the assumptions made by MySQL? This isn't a
@@ -49,6 +67,24 @@ Older versions of Vitess did have some limitations here, but luckily that has be
 The `LAST_INSERT_ID()` function is important enough to have been treated as [a special case in Vitess](https://github.com/vitessio/vitess/issues/3668).
 Queries that use `LAST_INSERT_ID()` are rewritten to instead get the value in a safe, reliable way
 from vtgate.
+
+```mermaid
+sequenceDiagram
+    actor Alice
+    actor Bob
+    participant vt as vtablet
+    participant DB as MySQL
+    Alice->>vt: INSERT c
+    vt->>DB: INSERT c
+    DB-->>vt: last_insert_id = 3
+    Bob->>vt: INSERT d
+    vt->>DB: INSERT d
+    DB-->>vt: last_insert_id = 4
+    Alice->>vt: SELECT last_insert_id()
+    vt-->>Alice: last_insert_id = 3
+    Bob->>vt: SELECT last_insert_id()
+    vt-->>Bob: last_insert_id = 4
+```
 
 As long as you're not using a truly ancient version of Vitess, you should be fine.
 
