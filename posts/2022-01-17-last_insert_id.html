@@ -5,20 +5,6 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>Postpunk Justin - What you should know about MySQL's LAST_INSERT_ID()</title>
         <link rel="stylesheet" type="text/css" href="../css/haskell.org.css" />
-        <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-DGSR0JYWH4"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-DGSR0JYWH4');
-        </script>
-        <!-- end gtag -->
-        <!-- begin mermaid.js boilerplate -->
-        <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-        <script>mermaid.initialize({startOnLoad:true});</script>
-        <!-- end mermaid.js boilerplate -->
     </head>
     <body>
         <div id="header">
@@ -60,19 +46,6 @@
 <p>The ID that was generated is maintained in the server on a <strong><em>per-connection</em></strong> basis. This means that the value returned by the function to a given client is the first <code>AUTO_INCREMENT</code> value generated for most recent statement affecting an <code>AUTO_INCREMENT</code> column <strong><em>by that client</em></strong>. This value cannot be affected by other clients, even if they generate <code>AUTO_INCREMENT</code> values of their own. This behavior ensures that each client can retrieve its own ID without concern for the activity of other clients, and without the need for locks or transactions.</p>
 </blockquote>
 <p>Translation: “don’t worry, we manage the implicit state here so you don’t have to.” And sure, you’re already trusting MySQL with your data, so why not trust it to return the correct ID?</p>
-<p>Here’s a sequence diagram showing how <code>last_insert_id()</code> works with multiple clients, according to the documentation:</p>
-<div class="mermaid">sequenceDiagram
-    actor Alice
-    participant DB as MySQL
-    actor Bob
-    Alice->>DB: INSERT a
-    Note right of Alice: a.id = 1
-    Bob->>DB: INSERT b
-    Note left of Bob: b.id = 2
-    Alice->>DB: SELECT last_insert_id()
-    DB-->>Alice: last_insert_id = 1
-    Bob->>DB: SELECT last_insert_id()
-    DB-->>Bob: last_insert_id = 2</div>
 <h3 id="what-about-vitess">what about Vitess?</h3>
 <p>But what if you <em>can’t</em> actually trust the assumptions made by MySQL? This isn’t a hypothetical. If you’re using <a href="https://vitess.io/">Vitess</a>, then you should be ready for subtle differences compared to real MySQL. I found this somewhat alarming tidbit in the <a href="https://vitess.io/docs/12.0/concepts/query-rewriting/#connection-pooling">Vitess docs</a> during my research:</p>
 <blockquote>
@@ -80,21 +53,6 @@
 </blockquote>
 <p>At first glance, that looks like it completely invalidates the assumptions made by <code>LAST_INSERT_ID()</code>. If Vitess is sharing connections and splitting queries across them, then it stands to reason that it could get an ID from a different connection than the one used to execute the query.</p>
 <p>Older versions of Vitess did have some limitations here, but luckily that has been fixed. The <code>LAST_INSERT_ID()</code> function is important enough to have been treated as <a href="https://github.com/vitessio/vitess/issues/3668">a special case in Vitess</a>. Queries that use <code>LAST_INSERT_ID()</code> are rewritten to instead get the value in a safe, reliable way from vtgate.</p>
-<div class="mermaid">sequenceDiagram
-    actor Alice
-    actor Bob
-    participant vt as vtgate
-    participant DB as MySQL
-    Alice->>vt: INSERT c
-    vt->>DB: INSERT c
-    DB-->>vt: last_insert_id = 3
-    Bob->>vt: INSERT d
-    vt->>DB: INSERT d
-    DB-->>vt: last_insert_id = 4
-    Alice->>vt: SELECT last_insert_id()
-    vt-->>Alice: last_insert_id = 3
-    Bob->>vt: SELECT last_insert_id()
-    vt-->>Bob: last_insert_id = 4</div>
 <p>As long as you’re not using a truly ancient version of Vitess, you should be fine.</p>
 <h3 id="whats-the-worst-case-scenario">what’s the worst-case scenario?</h3>
 <p>As an experiment, I did actually try to write an example service that got the wrong results from <code>LAST_INSERT_ID()</code>. It’s not impossible. What you have to do is go out of your way to share an open connection object between multiple threads that are each making inserts and retrieving the new IDs.</p>
